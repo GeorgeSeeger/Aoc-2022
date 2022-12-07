@@ -7,9 +7,11 @@ namespace AoC_2022 {
     public class Day7 : IProblem {
         public string Name => nameof(Day7);
 
+        private static Dir root;
+
         public string Part1() {
-            var root = ParseFiles();
-            var folders = Flatten(root).ToArray();
+            root = root ?? ParseFiles();
+            var folders = root.Flatten();
             return folders.Where(d => d.Size <= 100_000).Sum(d => d.Size).ToString();
         }
 
@@ -49,21 +51,14 @@ namespace AoC_2022 {
             return root;
         }
 
-        public IEnumerable<Dir> Flatten(Dir dir) {
-            yield return dir;
-            foreach (var c in dir.Contents) {
-                foreach (var cd in Flatten(c))
-                    yield return cd;
-            }
-        }
-
         public string Part2() {
             var capacity = 70_000_000;
             var needed = 30_000_000;
-            var root = ParseFiles();
-            var folders = Flatten(root).Where(d => d != root);
+            root = root ?? ParseFiles();
 
             var toDelete = needed - (capacity - root.Size);
+            
+            var folders = root.Flatten().Where(d => d != root);
             return folders.Where(d => d.Size > toDelete).OrderBy(d => d.Size).First().Size.ToString();
         }
     }
@@ -86,6 +81,14 @@ namespace AoC_2022 {
         public Dir Parent;
 
         public List<Dir> Contents = new List<Dir>();
+
+        public IEnumerable<Dir> Flatten() {
+            yield return this;
+            foreach (var c in this.Contents) {
+                foreach (var cd in c.Flatten())
+                    yield return cd;
+            }
+        }
 
     }
 }
