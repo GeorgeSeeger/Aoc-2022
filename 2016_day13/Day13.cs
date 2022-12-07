@@ -8,45 +8,34 @@ namespace AoC_2022 {
 
         private const uint sneed = 1362;
 
-        public string Part1() {
-            var start = new Point(1,1);
+        public string Part1()
+        {
             var target = new Point(31, 39);
-            const uint sneed = 1362;
+            var (paths, _) = FindPaths(pts => pts.All(p => p.head != target));
+            return paths.First().distance.ToString();
+        }
 
+        private static (List<Path>, HashSet<Point>) FindPaths(System.Func<IList<Path>, bool> matchCondition) {
+            var start = new Point(1, 1);
             var visited = new HashSet<Point> { start };
             var paths = new List<Path> { new Path(start, 0) };
-            while (true) {
+            while (matchCondition(paths)) {
                 var newPaths = new List<Path>();
                 foreach (var path in paths) {
                     var visiting = path.head.VisitableNeighbours(sneed);
                     newPaths.AddRange(visiting.Where(p => !visited.Contains(p)).Select(p => new Path(p, path.distance + 1)));
-                    if (visiting.Contains(target)) return (path.distance + 1).ToString();
-                
                 }
 
                 paths = newPaths;
                 foreach (var p in paths) visited.Add(p.head);
             }
+
+            return (paths, visited);
         }
 
         public string Part2() {
-            var start = new Point(1,1);
             var target = new Point(31, 39);
-            const uint sneed = 1362;
-
-            var visited = new HashSet<Point> { start };
-            var paths = new List<Path> { new Path(start, 0) };
-            while (paths.First().distance < 50) {
-                var newPaths = new List<Path>();
-                foreach (var path in paths) {
-                    var visiting = path.head.VisitableNeighbours(sneed);
-                    newPaths.AddRange(visiting.Where(p => !visited.Contains(p)).Select(p => new Path(p, path.distance + 1)));
-                }
-
-                paths = newPaths;
-                foreach (var p in paths) visited.Add(p.head);
-            }
-
+            var (paths, visited) = FindPaths(pts => pts.First().distance < 50);
             return visited.Count().ToString();
         }
 
