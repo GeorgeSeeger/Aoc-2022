@@ -39,21 +39,21 @@ namespace AoC_2022 {
         public class Segment {
             public Segment() {
                 this.Position = new Point(0, 0);
-                this.Visited = new List<Point> { this.Position };
+                this.visited = new List<Point> { this.Position };
             }
 
             public Segment(int tailSegments) : this() {
                 if (tailSegments == 1) return;
-                this.tail = new Segment(tailSegments - 1);
+                this.next = new Segment(tailSegments - 1);
             }
 
             public Point Position { get; set; }
 
-            private List<Point> Visited;
+            private List<Point> visited;
 
-            private Segment tail;
+            private Segment next;
 
-            public Segment Tail => this.tail == null ? this : this.tail.Tail;
+            public Segment Tail => this.next == null ? this : this.next.Tail;
 
             public void Move(char dir, int steps) {
                 for (var i = 0; i < steps; i++) Move(dir);
@@ -76,8 +76,8 @@ namespace AoC_2022 {
                     default: throw new System.ArgumentOutOfRangeException();
                 }
 
-                this.Visited.Add(this.Position);
-                this.tail.CatchUp(this.Position);
+                this.visited.Add(this.Position);
+                this.next.CatchUp(this.Position);
             }
 
             private void CatchUp(Point to) {
@@ -86,13 +86,13 @@ namespace AoC_2022 {
                 if (Math.Abs(to.X - x) > 1 || Math.Abs(to.Y - y) > 1) {
                     var delta = to.Compare(this.Position);
                     this.Position = new Point(x + delta.dX, y + delta.dY);                     
-                    this.Visited.Add(this.Position);
+                    this.visited.Add(this.Position);
                 }
 
-                if (this.tail != null) this.tail.CatchUp(this.Position);
+                if (this.next != null) this.next.CatchUp(this.Position);
             }
 
-            public int DistinctVisited => this.Visited.Distinct().Count();
+            public int DistinctVisited => this.visited.Distinct().Count();
         }
 
         public record Point(int X, int Y) {
