@@ -8,21 +8,26 @@ namespace AoC_2022 {
     public class Day13 : IProblem {
         public string Name => nameof(Day13);
 
+        public static PacketComparer comparer = new();
+
         public string Part1() {
             var input = GetInput();
-            return input.Select((pair, i) => (inOrder: pair.left < pair.right, i:i + 1))
-            .Where(x => x.inOrder)
-            .Sum(x => x.i)
-            .ToString();
+            return input.Select((pair, i) => (inOrder: comparer.Compare(pair.left, pair.right) < 0, index: i + 1))
+                        .Where(x => x.inOrder)
+                        .Sum(x => x.index)
+                        .ToString();
         }
 
         public string Part2() {
             var input = GetInput();
             var two = new Packet("[[2]]");
             var six = new Packet("[[6]]");
-            var ordered = input.SelectMany(pair => new[] { pair.left, pair.right }).Append(two).Append(six).Order(new PacketComparer()).ToList();
+            var ordered = input.SelectMany(pair => (new[] { pair.left, pair.right })).Append(two).Append(six).Order(comparer).ToList();
 
-            return ordered.Select((p, i) => (p, i: i + 1)).Where(x => Object.ReferenceEquals(x.p, two) || object.ReferenceEquals(x.p, six)).Aggregate(1, (acc, x) => acc * x.i).ToString();
+            return ordered.Select((p, i) => (p, i: i + 1))
+                          .Where(x => x.p == two || x.p == six)
+                          .Aggregate(1, (acc, x) => acc * x.i)
+                          .ToString();
         }
 
         public (Packet left, Packet right)[] GetInput() {
@@ -35,7 +40,6 @@ namespace AoC_2022 {
         }
 
         public class Packet {
-
             private List<object> Contents = new List<object>();
 
             public Packet(string line) : this(line, 1, out var _) { }
@@ -69,32 +73,17 @@ namespace AoC_2022 {
                 }
             }
 
-            private Packet(int i) {
+            public Packet(int i) {
                 this.Contents.Add(i);
             }
 
             public object this[int i] => i < this.Length ? this.Contents[i] : null;
 
             public int Length => this.Contents.Count;
+        }
 
-            public override bool Equals(object other) => other is Packet o ? this == o : false;
-
-            public static bool operator ==(Packet left, Packet right) {
-                if (left.Length == right.Length) {
-                    for (var i = 0; i < left.Length; i++) {
-                        if (left[i].Equals(right[i])) continue;
-                        return false;
-                    }
-
-                    return true;
-                }
-
-                return false;
-            }
-
-            public static bool operator !=(Packet left, Packet right) => !(left == right);
-
-            public static bool operator <(Packet left, Packet right) {
+        public class PacketComparer : IComparer<Packet> {
+            public int Compare(Packet left, Packet right) {
                 for (var i = 0; i < Math.Max(left.Length, right.Length); i++) {
                     var l = left[i];
                     var r = right[i];
@@ -102,13 +91,13 @@ namespace AoC_2022 {
                     var lp = l as Packet;
                     var rp = r as Packet;
 
-                    if (l == null) return true;
-                    if (r == null) return false;
+                    if (l == null) return -1;
+                    if (r == null) return 1;
 
                     if (l.GetType() == r.GetType() 
                         && l.GetType() == typeof(int)) {
                         if ((int)l == (int)r) continue;
-                        return (int)l < (int)r;
+                        return (int)l - (int)r;
                     }
 
                     if (l.GetType() == typeof(int)) {
@@ -118,27 +107,12 @@ namespace AoC_2022 {
                         rp = new Packet((int)r);
                     }
 
-                    if (lp == rp) continue;
-                    return lp < rp;
+                    var compare = Compare(lp, rp);
+                    if (compare == 0) continue;
+                    return compare;
                 }
 
-                return false;
-            }
-
-            public static bool operator >(Packet left, Packet right) {
-                return !(left < right);
-            }
-
-            public override int GetHashCode() {
-                throw new NotImplementedException();
-            }
-        }
-
-        public class PacketComparer : IComparer<Packet> {
-            public int Compare(Packet x, Packet y) {
-                if (x == y) return 0;
-                if (x < y) return -1; 
-                return 1;
+                return 0;
             }
         }
     }
