@@ -40,8 +40,13 @@ namespace AoC_2022 {
         private static bool FaceIsEnclosed(HashSet<Point> structure, Point point, int[] direction, int steps = 30) {
             var start = point.Add(direction);
 
+            // do we have a neighbour?
             if (structure.Contains(start)) return true;
 
+            // send out a ray, if it encounters nothing, then it's almost certainly not enclosed
+            if (Enumerable.Range(0, steps).Select(i => start.Add(direction.Select(x => i * x).ToArray())).All(p => !structure.Contains(p))) return false;
+
+            // else try an expanding gas cloud
             var gas = new HashSet<Point>{ start };
             var gasShell = new HashSet<Point> { start };
             for (var i = 0; i < steps; i++) {
